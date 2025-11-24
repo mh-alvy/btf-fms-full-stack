@@ -1,45 +1,27 @@
-# Full-stack deployment for Render.com
-FROM node:18-alpine AS frontend-builder
+# Backend-only deployment for Render.com
+FROM node:18-alpine
 
-# Build Frontend
-WORKDIR /app/frontend
-COPY frontend/package*.json ./
-RUN npm install
-COPY frontend/ ./
-RUN npm run build
+# Set working directory
+WORKDIR /app
 
-FROM node:18-alpine AS backend-builder
-
-# Build Backend
-WORKDIR /app/backend
+# Copy backend package files
 COPY backend/package*.json ./
+
+# Install production dependencies
 RUN npm install --production
+
+# Copy backend source code
 COPY backend/ ./
 
-FROM node:18-alpine AS production
+# Create a simple health check script
+RUN echo 'const http = require("http"); const options = { hostname: "localhost", port: process.env.PORT || 3001, path: "/api/health", method: "GET" }; const req = http.request(options, (res) => { process.exit(res.statusCode === 200 ? 0 : 1); }); req.on("error", () => process.exit(1)); req.end();' > health-check.js
 
-# Install serve globally for frontend
-RUN npm install -g serve pm2
+# Expose port
+EXPOSE $PORT
 
-# Copy backend
-WORKDIR /app
-COPY --from=backend-builder /app/backend ./backend
+# Add healthcheck
+HEALTHCHECK --interval=30s --timeout=10s --start-period=5s --retries=3 \
+  CMD node health-check.js
 
-# Copy frontend build
-COPY --from=frontend-builder /app/frontend/.next ./frontend/.next
-COPY --from=frontend-builder /app/frontend/public ./frontend/public
-COPY --from=frontend-builder /app/frontend/package.json ./frontend/package.json
-COPY --from=frontend-builder /app/frontend/node_modules ./frontend/node_modules
-
-# Create startup script
-RUN echo '#!/bin/sh' > start.sh && \
-    echo 'cd /app/backend && node server.js &' >> start.sh && \
-    echo 'cd /app/frontend && npm start &' >> start.sh && \
-    echo 'wait' >> start.sh && \
-    chmod +x start.sh
-
-# Expose both ports
-EXPOSE 3000 3001
-
-# Start both services
-CMD ["./start.sh"]
+# Start the backend server
+CMD ["npm", "start"]

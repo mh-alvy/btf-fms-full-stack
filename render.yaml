@@ -1,7 +1,7 @@
 services:
-  # Full-stack web service (Backend + Frontend)
+  # Backend API Service (Primary)
   - type: web
-    name: btf-fms-fullstack
+    name: btf-fms-backend
     env: docker
     plan: free
     region: oregon
@@ -12,28 +12,37 @@ services:
       - key: MONGODB_URI
         sync: false
       - key: SESSION_SECRET
-        sync: false
+        sync: false  
       - key: CORS_ORIGIN
-        value: https://btf-fms-fullstack.onrender.com
-      - key: NEXTAUTH_URL
-        value: https://btf-fms-fullstack.onrender.com
-      - key: NEXT_PUBLIC_API_URL
-        value: https://btf-fms-fullstack.onrender.com/api
+        value: https://btf-fms-frontend.onrender.com
     healthCheckPath: /api/health
-    
-  # Alternative: Separate Backend Service
+
+  # Frontend Service (Separate)  
   - type: web
-    name: btf-fms-backend
+    name: btf-fms-frontend
+    env: docker
+    plan: free
+    region: oregon
+    dockerfilePath: ./Dockerfile.frontend
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: NEXT_PUBLIC_API_URL
+        value: https://btf-fms-backend.onrender.com/api
+      - key: NEXT_TELEMETRY_DISABLED
+        value: "1"
+
+  # Alternative: Backend as Node.js service
+  - type: web
+    name: btf-fms-backend-node
     env: node
     plan: free
     region: oregon
-    buildCommand: cd backend && npm install
+    buildCommand: cd backend && npm install --production
     startCommand: cd backend && npm start
     envVars:
       - key: NODE_ENV
         value: production
-      - key: PORT
-        value: 10000
       - key: MONGODB_URI
         sync: false
       - key: SESSION_SECRET
@@ -41,17 +50,3 @@ services:
       - key: CORS_ORIGIN
         value: https://btf-fms-frontend.onrender.com
     healthCheckPath: /api/health
-
-  # Alternative: Separate Frontend Service
-  - type: web
-    name: btf-fms-frontend
-    env: node
-    plan: free
-    region: oregon
-    buildCommand: cd frontend && npm install && npm run build
-    startCommand: cd frontend && npm start
-    envVars:
-      - key: NODE_ENV
-        value: production
-      - key: NEXT_PUBLIC_API_URL
-        value: https://btf-fms-backend.onrender.com/api
