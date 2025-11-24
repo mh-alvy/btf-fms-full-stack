@@ -1,39 +1,25 @@
-# Multi-stage build for production deployment
-FROM node:18-alpine AS frontend-builder
+# Simple production build for backend API
+FROM node:18-alpine
 
-WORKDIR /app/frontend
-COPY frontend/package*.json ./
-RUN npm ci --only=production
-COPY frontend/ ./
-RUN npm run build
-
-FROM node:18-alpine AS backend-builder
-
-WORKDIR /app/backend
-COPY backend/package*.json ./
-RUN npm ci --only=production
-COPY backend/ ./
-
-FROM node:18-alpine AS production
-
+# Set working directory
 WORKDIR /app
 
-# Copy backend
-COPY --from=backend-builder /app/backend ./backend
+# Copy backend package files
+COPY backend/package*.json ./
 
-# Copy frontend build
-COPY --from=frontend-builder /app/frontend/out ./frontend/out
+# Install dependencies
+RUN npm install --production
 
-# Install serve to serve frontend
-RUN npm install -g serve
+# Copy backend source
+COPY backend/ ./
 
-# Expose ports
-EXPOSE 3000 3001
+# Create non-root user for security
+RUN addgroup -g 1001 -S nodejs
+RUN adduser -S backend -u 1001
+USER backend
 
-# Create startup script
-RUN echo '#!/bin/sh' > start.sh && \
-    echo 'cd /app/backend && node server.js &' >> start.sh && \
-    echo 'serve -s /app/frontend/out -l 3000' >> start.sh && \
-    chmod +x start.sh
+# Expose port
+EXPOSE 3001
 
-CMD ["./start.sh"]
+# Start the server
+CMD ["npm", "start"]
