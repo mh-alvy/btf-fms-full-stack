@@ -1,25 +1,57 @@
 services:
+  # Full-stack web service (Backend + Frontend)
+  - type: web
+    name: btf-fms-fullstack
+    env: docker
+    plan: free
+    region: oregon
+    dockerfilePath: ./Dockerfile
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: MONGODB_URI
+        sync: false
+      - key: SESSION_SECRET
+        sync: false
+      - key: CORS_ORIGIN
+        value: https://btf-fms-fullstack.onrender.com
+      - key: NEXTAUTH_URL
+        value: https://btf-fms-fullstack.onrender.com
+      - key: NEXT_PUBLIC_API_URL
+        value: https://btf-fms-fullstack.onrender.com/api
+    healthCheckPath: /api/health
+    
+  # Alternative: Separate Backend Service
   - type: web
     name: btf-fms-backend
     env: node
     plan: free
-    buildCommand: npm install --prefix backend
-    startCommand: npm start --prefix backend
+    region: oregon
+    buildCommand: cd backend && npm install
+    startCommand: cd backend && npm start
     envVars:
       - key: NODE_ENV
         value: production
       - key: PORT
         value: 10000
-    healthCheckPath: /health
-  
+      - key: MONGODB_URI
+        sync: false
+      - key: SESSION_SECRET
+        sync: false
+      - key: CORS_ORIGIN
+        value: https://btf-fms-frontend.onrender.com
+    healthCheckPath: /api/health
+
+  # Alternative: Separate Frontend Service
   - type: web
-    name: btf-fms-frontend  
+    name: btf-fms-frontend
     env: node
     plan: free
-    buildCommand: npm install --prefix frontend && npm run build --prefix frontend
-    startCommand: npm start --prefix frontend
+    region: oregon
+    buildCommand: cd frontend && npm install && npm run build
+    startCommand: cd frontend && npm start
     envVars:
       - key: NODE_ENV
         value: production
-      - key: PORT
-        value: 3000
+      - key: NEXT_PUBLIC_API_URL
+        value: https://btf-fms-backend.onrender.com/api

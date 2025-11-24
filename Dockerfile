@@ -1,25 +1,45 @@
-# Simple production build for backend API
-FROM node:18-alpine
+# Full-stack deployment for Render.com
+FROM node:18-alpine AS frontend-builder
 
-# Set working directory
-WORKDIR /app
+# Build Frontend
+WORKDIR /app/frontend
+COPY frontend/package*.json ./
+RUN npm install
+COPY frontend/ ./
+RUN npm run build
 
-# Copy backend package files
+FROM node:18-alpine AS backend-builder
+
+# Build Backend
+WORKDIR /app/backend
 COPY backend/package*.json ./
-
-# Install dependencies
 RUN npm install --production
-
-# Copy backend source
 COPY backend/ ./
 
-# Create non-root user for security
-RUN addgroup -g 1001 -S nodejs
-RUN adduser -S backend -u 1001
-USER backend
+FROM node:18-alpine AS production
 
-# Expose port
-EXPOSE 3001
+# Install serve globally for frontend
+RUN npm install -g serve pm2
 
-# Start the server
-CMD ["npm", "start"]
+# Copy backend
+WORKDIR /app
+COPY --from=backend-builder /app/backend ./backend
+
+# Copy frontend build
+COPY --from=frontend-builder /app/frontend/.next ./frontend/.next
+COPY --from=frontend-builder /app/frontend/public ./frontend/public
+COPY --from=frontend-builder /app/frontend/package.json ./frontend/package.json
+COPY --from=frontend-builder /app/frontend/node_modules ./frontend/node_modules
+
+# Create startup script
+RUN echo '#!/bin/sh' > start.sh && \
+    echo 'cd /app/backend && node server.js &' >> start.sh && \
+    echo 'cd /app/frontend && npm start &' >> start.sh && \
+    echo 'wait' >> start.sh && \
+    chmod +x start.sh
+
+# Expose both ports
+EXPOSE 3000 3001
+
+# Start both services
+CMD ["./start.sh"]

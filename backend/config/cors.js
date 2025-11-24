@@ -27,7 +27,11 @@ const corsConfig = {
     origin: function (origin, callback) {
       const allowedOrigins = process.env.CORS_ORIGIN 
         ? process.env.CORS_ORIGIN.split(',').map(o => o.trim())
-        : [];
+        : [
+            'https://btf-fms-fullstack.onrender.com',
+            'https://btf-fms-frontend.onrender.com',
+            'https://btf-fms-backend.onrender.com'
+          ];
       
       // Allow requests with no origin (mobile apps, curl, etc.) in development only
       if (!origin && process.env.NODE_ENV !== 'production') {
