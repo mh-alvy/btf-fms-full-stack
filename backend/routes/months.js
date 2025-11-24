@@ -5,7 +5,12 @@ const Month = require('../models/Month');
 // Get all months
 router.get('/', async (req, res) => {
   try {
-    const months = await Month.find().populate('courseId');
+    const months = await Month.find().populate({
+      path: 'courseId',
+      populate: {
+        path: 'batchId'
+      }
+    });
     res.json(months);
   } catch (error) {
     res.status(500).json({ message: error.message });
@@ -15,7 +20,12 @@ router.get('/', async (req, res) => {
 // Get month by ID
 router.get('/:id', async (req, res) => {
   try {
-    const month = await Month.findById(req.params.id).populate('courseId');
+    const month = await Month.findById(req.params.id).populate({
+      path: 'courseId',
+      populate: {
+        path: 'batchId'
+      }
+    });
     if (!month) return res.status(404).json({ message: 'Month not found' });
     res.json(month);
   } catch (error) {

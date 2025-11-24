@@ -134,11 +134,19 @@ export default function StudentManagement() {
   };
 
   const getCoursesForBatch = (batchId: string) => {
-    return courses.filter((course: any) => course.batchId === batchId);
+    return courses.filter((course: any) => {
+      // Handle both populated and non-populated batchId
+      const courseBatchId = course.batchId?._id || course.batchId;
+      return courseBatchId === batchId;
+    });
   };
 
   const getMonthsForCourse = (courseId: string) => {
-    return months.filter((month: any) => month.courseId === courseId);
+    return months.filter((month: any) => {
+      // Handle both populated and non-populated courseId
+      const monthCourseId = month.courseId?._id || month.courseId;
+      return monthCourseId === courseId;
+    });
   };
 
   return (

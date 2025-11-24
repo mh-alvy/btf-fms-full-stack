@@ -5,7 +5,7 @@ const sessionConfig = {
   resave: false,
   saveUninitialized: false,
   store: connectMongo.create({ 
-    mongoUrl: process.env.MONGO_URI,
+    mongoUrl: process.env.MONGODB_URI,
     collectionName: 'sessions',
     ttl: 24 * 60 * 60, // 1 day
     autoRemove: 'native',

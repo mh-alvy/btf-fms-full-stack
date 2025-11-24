@@ -88,4 +88,20 @@
     background: white !important;
     color: black !important;
   }
+  
+  /* Thermal printer specific styles */
+  #thermal-invoice {
+    width: 58mm !important;
+    font-size: 11px !important;
+    font-family: 'Courier New', monospace !important;
+    line-height: 1.2 !important;
+    margin: 0 !important;
+    padding: 2mm !important;
+  }
+  
+  .thermal-print {
+    page-break-inside: avoid;
+    margin: 0;
+    padding: 0;
+  }
 }

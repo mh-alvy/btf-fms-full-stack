@@ -232,12 +232,13 @@ export default function BatchManagement() {
             <h4 className="font-medium text-gray-900 dark:text-white mb-3">Existing Courses</h4>
             <div className="space-y-2 max-h-64 overflow-y-auto">
               {courses.map((course: any) => {
-                const batch = batches.find((b: any) => b._id === course.batchId);
+                // Use populated batchId data if available, otherwise fall back to manual lookup
+                const batchName = course.batchId?.name || batches.find((b: any) => b._id === course.batchId)?.name || 'Unknown';
                 return (
                   <div key={course._id} className="flex items-center justify-between p-3 bg-gray-50 dark:bg-gray-700 rounded-lg">
                     <div>
                       <span className="text-sm font-medium block">{course.name}</span>
-                      <span className="text-xs text-gray-500">Batch: {batch?.name || 'Unknown'}</span>
+                      <span className="text-xs text-gray-500">Batch: {batchName}</span>
                     </div>
                     <button
                       onClick={() => handleDeleteCourse(course._id)}
@@ -294,10 +295,11 @@ export default function BatchManagement() {
               >
                 <option value="">Select Course</option>
                 {courses.map((course: any) => {
-                  const batch = batches.find((b: any) => b._id === course.batchId);
+                  // Use populated batchId data if available, otherwise fall back to manual lookup
+                  const batchName = course.batchId?.name || batches.find((b: any) => b._id === course.batchId)?._name || 'Unknown Batch';
                   return (
                     <option key={course._id} value={course._id}>
-                      {course.name} ({batch?.name || 'Unknown Batch'})
+                      {course.name} ({batchName})
                     </option>
                   );
                 })}
@@ -331,15 +333,16 @@ export default function BatchManagement() {
             <h4 className="font-medium text-gray-900 dark:text-white mb-3">Existing Months</h4>
             <div className="space-y-2 max-h-64 overflow-y-auto">
               {months.map((month: any) => {
-                const course = courses.find((c: any) => c._id === month.courseId);
-                const batch = course ? batches.find((b: any) => b._id === course.batchId) : null;
+                // Use the populated courseId from the API response
+                const course = month.courseId;
+                const batchName = course?.batchId?.name || 'Unknown';
                 return (
                   <div key={month._id} className="flex items-center justify-between p-3 bg-gray-50 dark:bg-gray-700 rounded-lg">
                     <div>
                       <span className="text-sm font-medium block">{month.name}</span>
                       <span className="text-xs text-gray-500">
                         Course: {course?.name || 'Unknown'} | 
-                        Batch: {batch?.name || 'Unknown'} | 
+                        Batch: {batchName} | 
                         Fee: ৳{month.payment}
                       </span>
                     </div>

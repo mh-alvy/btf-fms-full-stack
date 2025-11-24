@@ -90,6 +90,7 @@ export const paymentsApi = {
   delete: (id: string) => api.delete(`/api/payments/${id}`),
   generateInvoice: () => api.get('/api/payments/generate-invoice'),
   getDiscounted: () => api.get('/api/payments?hasDiscount=true'),
+  getPaidMonths: (studentId: string) => api.get(`/api/payments/student/${studentId}/paid-months`),
 };
 
 export const activitiesApi = {

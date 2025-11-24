@@ -1,6 +1,7 @@
 const express = require('express');
 const router = express.Router();
 const Payment = require('../models/Payment');
+const { generateInvoiceNumber } = require('../utils/helpers');
 
 // Get all payments
 router.get('/', async (req, res) => {
@@ -12,7 +13,27 @@ router.get('/', async (req, res) => {
       query.discountAmount = { $gt: 0 };
     }
     
-    const payments = await Payment.find(query).populate('studentId').populate('months').populate('monthPayments.monthId');
+    const payments = await Payment.find(query)
+      .populate('studentId')
+      .populate({
+        path: 'months',
+        populate: {
+          path: 'courseId',
+          populate: {
+            path: 'batchId'
+          }
+        }
+      })
+      .populate({
+        path: 'monthPayments.monthId',
+        populate: {
+          path: 'courseId',
+          populate: {
+            path: 'batchId'
+          }
+        }
+      });
+      
     res.json(payments);
   } catch (error) {
     res.status(500).json({ message: error.message });
@@ -41,10 +62,55 @@ router.get('/:id', async (req, res) => {
   }
 });
 
+// Get paid months for a specific student
+router.get('/student/:studentId/paid-months', async (req, res) => {
+  try {
+    const payments = await Payment.find({ 
+      studentId: req.params.studentId 
+    }).populate('months').populate('monthPayments.monthId');
+    
+    // Extract all paid month IDs
+    const paidMonthIds = new Set();
+    
+    payments.forEach(payment => {
+      // Check legacy months field
+      if (payment.months && payment.months.length > 0) {
+        payment.months.forEach(month => {
+          if (month && month._id) {
+            paidMonthIds.add(month._id.toString());
+          }
+        });
+      }
+      
+      // Check monthPayments field
+      if (payment.monthPayments && payment.monthPayments.length > 0) {
+        payment.monthPayments.forEach(monthPayment => {
+          if (monthPayment.monthId && monthPayment.monthId._id) {
+            paidMonthIds.add(monthPayment.monthId._id.toString());
+          }
+        });
+      }
+    });
+    
+    res.json({
+      success: true,
+      paidMonthIds: Array.from(paidMonthIds),
+      totalPayments: payments.length
+    });
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+});
+
 // Create payment
 router.post('/', async (req, res) => {
-  const payment = new Payment(req.body);
   try {
+    // Generate invoice number if not provided
+    if (!req.body.invoiceNumber) {
+      req.body.invoiceNumber = await generateInvoiceNumber();
+    }
+    
+    const payment = new Payment(req.body);
     const newPayment = await payment.save();
     res.status(201).json(newPayment);
   } catch (error) {

@@ -16,7 +16,17 @@ router.get('/', async (req, res) => {
       query.studentId = studentId;
     }
     
-    const students = await Student.find(query).populate('institutionId').populate('batchId').populate('enrolledCourses');
+    const students = await Student.find(query)
+      .populate('institutionId')
+      .populate('batchId')
+      .populate({
+        path: 'enrolledCourses.courseId',
+        populate: {
+          path: 'batchId'
+        }
+      })
+      .populate('enrolledCourses.startingMonthId')
+      .populate('enrolledCourses.endingMonthId');
     res.json(students);
   } catch (error) {
     res.status(500).json({ message: error.message });
@@ -37,7 +47,17 @@ router.get('/generate-id', async (req, res) => {
 // Get student by ID
 router.get('/:id', async (req, res) => {
   try {
-    const student = await Student.findById(req.params.id).populate('institutionId').populate('batchId').populate('enrolledCourses');
+    const student = await Student.findById(req.params.id)
+      .populate('institutionId')
+      .populate('batchId')
+      .populate({
+        path: 'enrolledCourses.courseId',
+        populate: {
+          path: 'batchId'
+        }
+      })
+      .populate('enrolledCourses.startingMonthId')
+      .populate('enrolledCourses.endingMonthId');
     if (!student) return res.status(404).json({ message: 'Student not found' });
     res.json(student);
   } catch (error) {
@@ -49,7 +69,16 @@ router.get('/:id', async (req, res) => {
 router.get('/byStudentId/:studentId', async (req, res) => {
   try {
     const student = await Student.findOne({ studentId: req.params.studentId })
-      .populate('institutionId').populate('batchId').populate('enrolledCourses');
+      .populate('institutionId')
+      .populate('batchId')
+      .populate({
+        path: 'enrolledCourses.courseId',
+        populate: {
+          path: 'batchId'
+        }
+      })
+      .populate('enrolledCourses.startingMonthId')
+      .populate('enrolledCourses.endingMonthId');
     if (!student) return res.status(404).json({ message: 'Student not found' });
     res.json(student);
   } catch (error) {
