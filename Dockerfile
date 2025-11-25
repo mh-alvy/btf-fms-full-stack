@@ -7,16 +7,17 @@ RUN apk add --no-cache libc6-compat
 # Set working directory
 WORKDIR /app
 
-# Copy and install backend dependencies first
+# Copy package files for both frontend and backend
 COPY backend/package*.json ./backend/
-WORKDIR /app/backend
-RUN npm ci --production
-
-# Copy and install frontend dependencies
-WORKDIR /app
 COPY frontend/package*.json ./frontend/
+
+# Install backend dependencies
+WORKDIR /app/backend
+RUN if [ -f package-lock.json ]; then npm ci --omit=dev; else npm install --omit=dev; fi
+
+# Install frontend dependencies
 WORKDIR /app/frontend
-RUN npm ci
+RUN if [ -f package-lock.json ]; then npm ci; else npm install; fi
 
 # Copy all source code
 WORKDIR /app
