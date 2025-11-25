@@ -1,27 +1,45 @@
-# Backend-only deployment for Render.com
+# Full-Stack Deployment for Render.com
 FROM node:18-alpine
+
+# Install system dependencies
+RUN apk add --no-cache libc6-compat
 
 # Set working directory
 WORKDIR /app
 
-# Copy backend package files
-COPY backend/package*.json ./
+# Copy and install backend dependencies first
+COPY backend/package*.json ./backend/
+WORKDIR /app/backend
+RUN npm ci --production
 
-# Install production dependencies
-RUN npm install --production
+# Copy and install frontend dependencies
+WORKDIR /app
+COPY frontend/package*.json ./frontend/
+WORKDIR /app/frontend
+RUN npm ci
 
-# Copy backend source code
-COPY backend/ ./
+# Copy all source code
+WORKDIR /app
+COPY backend/ ./backend/
+COPY frontend/ ./frontend/
 
-# Create a simple health check script
-RUN echo 'const http = require("http"); const options = { hostname: "localhost", port: process.env.PORT || 3001, path: "/api/health", method: "GET" }; const req = http.request(options, (res) => { process.exit(res.statusCode === 200 ? 0 : 1); }); req.on("error", () => process.exit(1)); req.end();' > health-check.js
+# Set production environment
+ENV NODE_ENV=production
+ENV NEXT_TELEMETRY_DISABLED=1
 
-# Expose port
+# Build frontend as static export
+WORKDIR /app/frontend
+RUN npm run build
+
+# Move static build to backend public folder  
+WORKDIR /app
+RUN mkdir -p ./backend/public && cp -r ./frontend/out/* ./backend/public/
+
+# Set working directory to backend
+WORKDIR /app/backend
+
+# Expose port (Render will provide PORT environment variable)
 EXPOSE $PORT
 
-# Add healthcheck
-HEALTHCHECK --interval=30s --timeout=10s --start-period=5s --retries=3 \
-  CMD node health-check.js
-
-# Start the backend server
+# Start only the backend server (which will serve static frontend)
 CMD ["npm", "start"]

@@ -1,4 +1,5 @@
 const express = require('express');
+const path = require('path');
 
 const configureRoutes = (app) => {
   // API Routes
@@ -28,6 +29,18 @@ const configureRoutes = (app) => {
   app.use('/api/*', (req, res) => {
     res.status(404).json({ message: 'API endpoint not found' });
   });
+
+  // In production, serve the frontend app for all non-API routes
+  if (process.env.NODE_ENV === 'production') {
+    app.get('*', (req, res) => {
+      const indexPath = path.join(__dirname, '../public/index.html');
+      res.sendFile(indexPath, (err) => {
+        if (err) {
+          res.status(500).send('Error loading application');
+        }
+      });
+    });
+  }
 };
 
 module.exports = configureRoutes;

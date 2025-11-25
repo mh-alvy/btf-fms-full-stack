@@ -1,6 +1,9 @@
 import axios from 'axios';
 
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001';
+// For full-stack deployment, use relative URLs to avoid CORS issues
+const API_BASE_URL = process.env.NODE_ENV === 'production' 
+  ? '' // Use relative URLs in production (same domain)
+  : process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001';
 
 const api = axios.create({
   baseURL: API_BASE_URL,
