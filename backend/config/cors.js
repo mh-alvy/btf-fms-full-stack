@@ -3,16 +3,29 @@ const corsConfig = {
     origin: function (origin, callback) {
       const allowedOrigins = process.env.CORS_ORIGIN 
         ? process.env.CORS_ORIGIN.split(',').map(o => o.trim())
-        : ['http://localhost:3000', 'http://localhost:3002', 'http://127.0.0.1:3000', 'http://127.0.0.1:3002'];
+        : [
+            'http://localhost:3000', 
+            'http://localhost:3001', 
+            'http://localhost:3002', 
+            'http://127.0.0.1:3000', 
+            'http://127.0.0.1:3001',
+            'http://127.0.0.1:3002'
+          ];
       
       // Allow requests with no origin (mobile apps, curl, etc.) in development
       if (!origin) {
         return callback(null, true);
       }
       
+      // Allow any localhost or 127.0.0.1 origin in development
+      if (origin && (origin.includes('localhost') || origin.includes('127.0.0.1'))) {
+        return callback(null, true);
+      }
+      
       if (allowedOrigins.includes(origin)) {
         callback(null, true);
       } else {
+        console.log('CORS blocked origin:', origin);
         callback(new Error('Not allowed by CORS - Origin not in whitelist'));
       }
     },

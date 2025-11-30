@@ -6,7 +6,8 @@ const nextConfig = {
     domains: ['images.pexels.com'],
     unoptimized: true,
   },
-  output: 'export',
+  // Remove output: 'export' for development mode
+  // output: 'export',
   
   // Production optimizations
   poweredByHeader: false,
@@ -14,14 +15,8 @@ const nextConfig = {
   
   // Handle trailing slashes
   trailingSlash: false,
-  
-  // Environment variables
-  env: {
-    CUSTOM_KEY: process.env.CUSTOM_KEY,
-  },
-
-  // Disable telemetry
-  telemetry: false,
 };
+
+module.exports = nextConfig;
 
 module.exports = nextConfig;

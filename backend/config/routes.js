@@ -30,17 +30,15 @@ const configureRoutes = (app) => {
     res.status(404).json({ message: 'API endpoint not found' });
   });
 
-  // In production, serve the frontend app for all non-API routes
-  if (process.env.NODE_ENV === 'production') {
-    app.get('*', (req, res) => {
-      const indexPath = path.join(__dirname, '../public/index.html');
-      res.sendFile(indexPath, (err) => {
-        if (err) {
-          res.status(500).send('Error loading application');
-        }
-      });
+  // Serve the frontend app for all non-API routes (in all environments)
+  app.get('*', (req, res) => {
+    const indexPath = path.join(__dirname, '../public/index.html');
+    res.sendFile(indexPath, (err) => {
+      if (err) {
+        res.status(500).send('Error loading application');
+      }
     });
-  }
+  });
 };
 
 module.exports = configureRoutes;

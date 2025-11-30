@@ -26,12 +26,9 @@ const configureMiddleware = (app) => {
   // Session management
   app.use(session(sessionConfig));
 
-  // In production, serve static files from the frontend build
-  if (process.env.NODE_ENV === 'production') {
-    // Serve static frontend files
-    const publicPath = path.join(__dirname, '../public');
-    app.use(express.static(publicPath));
-  }
+  // Serve static files from public directory
+  const publicPath = path.join(__dirname, '../public');
+  app.use(express.static(publicPath));
 };
 
 module.exports = configureMiddleware;
